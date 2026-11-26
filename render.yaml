@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: trade-ai
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: SCAN_SYMBOLS
+        value: SPY,QQQ,YM=F,EURUSD=X,GBPUSD=X
+      - key: SCAN_INTERVALS
+        value: 15m,1h,4h,1d
+      - key: SCAN_SECONDS
+        value: "60"
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_CLAIMS_EMAIL
+        value: mailto:admin@example.com
