@@ -107,7 +107,8 @@ async def scan_loop():
                     signals,_=utbot(df)
                     if signals:
                         sig=signals[-1]
-                        if store_signal(symbol,interval,sig):
+                        freshness={'15m':1800,'1h':7200,'4h':28800,'1d':172800}.get(interval,7200)
+                        if int(time.time())-sig['time'] <= freshness and store_signal(symbol,interval,sig):
                             send_push({'title':f"{sig['side']} · {symbol}",'body':f"{interval} candle closed at {sig['close']:.5f}. UT Bot + EMA/RSI confirmation.",'tag':f"{symbol}-{interval}-{sig['time']}",'url':f"/?symbol={symbol}&interval={interval}"})
                 except Exception as exc: print(f'Scan failed {symbol} {interval}:',exc)
         await asyncio.sleep(SCAN_SECONDS)
