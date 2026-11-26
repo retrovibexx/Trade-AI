@@ -6,9 +6,15 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
+    disk:
+      name: trade-ai-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.11
+      - key: DATABASE_PATH
+        value: /var/data/trade_ai.db
       - key: SCAN_SYMBOLS
         value: SPY,QQQ,YM=F,EURUSD=X,GBPUSD=X
       - key: SCAN_INTERVALS
