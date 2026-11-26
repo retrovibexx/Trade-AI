@@ -27,15 +27,16 @@ def db():
 
 
 def get_history(symbol:str, interval:str, period:Optional[str]=None):
-    periods={'1m':'5d','2m':'5d','5m':'60d','15m':'60d','30m':'60d','60m':'730d','1h':'730d','90m':'60d','1d':'10y'}
-    ticker=yf.Ticker(symbol); df=ticker.history(period=period or periods.get(interval,'60d'),interval='60m' if interval=='1h' else interval,auto_adjust=False)
+    base_interval='60m' if interval in ('1h','4h') else interval
+    periods={'1m':'5d','2m':'5d','5m':'60d','15m':'60d','30m':'60d','60m':'730d','1h':'730d','4h':'730d','90m':'60d','1d':'10y'}
+    ticker=yf.Ticker(symbol); df=ticker.history(period=period or periods.get(interval,'60d'),interval=base_interval,auto_adjust=False)
     if df is None or df.empty: return pd.DataFrame()
     df=df.dropna(subset=['Open','High','Low','Close']).copy()
-    # Yahoo can include the currently forming candle. Exclude it conservatively.
     now=pd.Timestamp.now(tz='UTC')
-    idx=pd.to_datetime(df.index,utc=True)
-    df.index=idx
-    durations={'1m':60,'2m':120,'5m':300,'15m':900,'30m':1800,'60m':3600,'1h':3600,'90m':5400,'1d':86400}
+    df.index=pd.to_datetime(df.index,utc=True)
+    if interval=='4h':
+        df=df.resample('4h',label='left',closed='left').agg({'Open':'first','High':'max','Low':'min','Close':'last','Volume':'sum'}).dropna(subset=['Open','High','Low','Close'])
+    durations={'1m':60,'2m':120,'5m':300,'15m':900,'30m':1800,'60m':3600,'1h':3600,'4h':14400,'90m':5400,'1d':86400}
     dur=durations.get(interval,3600)
     if interval!='1d': df=df[df.index + pd.to_timedelta(dur,unit='s') <= now]
     else: df=df[df.index.date < now.date()]
